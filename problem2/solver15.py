@@ -15,10 +15,10 @@ with open(sys.argv[1], 'r') as f:
     text_puzzle = f.read().splitlines()
 
 puzzle_unordered = []
-for tile in text_puzzle:
+for line in text_puzzle:
     sublist = []
-    for num in tile.split(' '):
-        sublist.append(int(num))
+    for tile in line.split(' '):
+        sublist.append(int(tile))
     puzzle_unordered.append(sublist)
 	
 print puzzle_unordered
