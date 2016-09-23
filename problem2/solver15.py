@@ -33,6 +33,34 @@ for i in range(4):
    		if puzzle_unordered[i][j] != goal_state[i][j]:
    		   	misplaced += 1
 print misplaced	
+
+#Successor function (returns 4 nodes representing the 4 possible moves)
+
+#find the location of zero
+for i,list in enumerate(puzzle_unordered):
+   	for j,tile in enumerate(list):
+       		if tile == 0:
+       			zero_position = i, j
+			print zero_position
+
+			#top left corner
+			if zero_position[0] == 0:
+				if zero_position[1] == 0:
+					print "in top left corner"
+			
+			#bottom left corner
+				if zero_position[1] == 3:
+					print "in bottom left corner"
+								
+			#top right corner
+			if zero_position[0] == 3:
+				if zero_position[1] == 0:
+					print "in top right corner"
+			
+			#bottom right corner
+				if zero_position[1] == 3:
+					print "in bottom right corner"
+			
 	
 #A* search algorithm using hueristic_astar
 #def astar():
