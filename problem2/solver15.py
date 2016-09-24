@@ -3,13 +3,13 @@
 #2)	Initial State: a 15 puzzle board arrangement as given in a text file
 #3)	Successor Function SUCC: The successor function returns 
 #	the four possible boards that result from the four possible
-#   moves that are available, Left, Right, Down, and Up
+#	moves that are available, Left, Right, Down, and Up
 #4)	Goal state: 15 puzzle goal state
 #5)	Cost function: Cost = 1 for each edge traveled between nodes. The number 
-#   of edges traveled is the total cost. 
-#   to reach the goal state is the total cost.
-#6) Heuristic Function: The heuristic funtion chooses the succesor state
-#   with the lowest number of misplaced tiles 
+#	of edges traveled is the total cost. 
+#	to reach the goal state is the total cost.
+#6)	Heuristic Function: The heuristic funtion chooses the succesor state
+#	with the lowest number of misplaced tiles 
 
 #References:
 #
@@ -117,11 +117,6 @@ for i,list in enumerate(puzzle_unordered):
 #A* search algorithm
 #def astar():
 
-#number of misplaced tiles heuristic
-#def heuristic_astar():
-
 #Returns a list of all moves
 #def moves(): 
 #    output = [] 
-
-
