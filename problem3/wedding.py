@@ -1,9 +1,16 @@
-# wedding,py : The problem here is to arrange
+
+'''
+Created on Sep 18, 2016
+@author: Subhash Bylaiah
+'''
+
+
+# wedding.py : The problem here is to arrange
 
 # Spate Space:
 #       This is the space of all possible seating arrangement of M people,
 #       in an (MxN) matrix space
-#           where M represents the minimum number of tables (rows) needed
+#           where M represents the number of tables (rows) needed
 #           and N represents the seats accomodated in a table
 #
 #
@@ -22,21 +29,34 @@
 # Data Structures used:
 #     Tables matrix: dictionary of tables, with key as table number and value as list of people seated on it
 
+######################################################################################################################
+#       USES PYTHON VERSION 3
+######################################################################################################################
+
+#!/usr/local/bin/python3
 
 import pprint
+import sys
 
-#   This function reads from the input file and creates
-#       a friends_dict, which creates a mapping for a friend that knows other friends
-#       a friends_list, with list of all people, and we will pop out from the list as we go about adding them on to the
-#           tables, seating arrangement
+if sys.version_info.major==2:
+	print("warning! use python3")
 
 
-MAX_SEATS_AT_TABLE = 4
+input_file = sys.argv[1]
+MAX_SEATS_AT_TABLE = sys.argv[2]
+
 friends_dict = {}
 friends_list = []
 tables = {}
 
 def read_friends_from_file(filename):
+    """
+    #   This function reads from the input file and creates
+    #       a friends_dict, which creates a mapping for a friend that knows other friends
+    #       a friends_list, with list of all people, and we will pop out from the list as we go about adding them on to the
+    #           tables, seating arrangement
+    :param filename:
+    """
     with open(filename) as f:
         for line in f:
             friends = line.split()
@@ -44,6 +64,13 @@ def read_friends_from_file(filename):
             list(friends_list.append(friend) for friend in friends if friend not in friends_list)
 
 def has_friend_at_table(friend, people_at_table):
+    """
+    Checks whether the input perfon (friend) has a friend seated at table
+    :param friend: Person to be seated
+    :param people_at_table: People already seated at the table
+    :return: True if the person has a friend seated, else False
+    """
+
     has_friend = False
     for person in people_at_table:
         if (friend in friends_dict.get(person, []) or person in friends_dict.get(friend, [])):
@@ -103,8 +130,13 @@ def generate_successors(fringe, friend):
 
 def solve_friends_seating():
     """
+        Solution function for the problem
+        Iterates over the friends list,
+            starts with an initial empty fringe,
+            Fringe is expanded to add a friend, in minimum possible ways, thereby generating successors
+                fringe is further expanded this way until all friends are added
 
-    :return:
+    :return: returns the values least_tables needed and best seating config
     """
     # Fringe is a list of dictionary
     fringe = [{}]
@@ -112,18 +144,33 @@ def solve_friends_seating():
         friend = friends_list.pop(0)
         fringe = generate_successors(fringe, friend)
     pprint.pprint(fringe, indent=4)
+    best_config = {}
+    least_tables = sys.maxsize
+    for seating_config in fringe:
+        num_tables = len(seating_config)
+        if num_tables <  least_tables:
+            least_tables = num_tables
+            best_config = seating_config
+    return least_tables, best_config
 
-
-
-read_friends_from_file('myfriends.txt')
+read_friends_from_file(input_file)
 print('\n')
 pprint.pprint(friends_dict, indent=4)
 print('\n')
 pprint.pprint(friends_list, indent=4)
 print('\n')
 
-solve_friends_seating()
+least_tables, best_config = solve_friends_seating()
+
+printstring = ""
+for values in best_config.values():
+    table_string = ""
+    for person in values:
+        table_string = table_string + person  + ","
+    table_string = table_string.rstrip(',')
+    printstring = printstring + " " + table_string
+
+print("Printing Best config:")
+print(str(least_tables) + " " + printstring)
 
 # seat_friend({1: ['davis'], 2: ['steven']}, 'subhash')
-
-pprint.pprint(tables, indent=4)

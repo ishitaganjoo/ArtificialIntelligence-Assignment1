@@ -1,3 +1,7 @@
+'''
+Created on Sep 18, 2016
+@author: Subhash Bylaiah, Brian Trippi
+'''
 # 1)	Set of states S: Any arrangement of 15 tiles on a 4x4 board
 #	(Note some arrangements are not solvable)
 # 2)	Initial State: a 15 puzzle board arrangement as given in a text file
@@ -7,7 +11,6 @@
 # 4)	Goal state: 15 puzzle goal state
 # 5)	Cost function: Cost = 1 for each edge traveled between nodes. The number
 #	of edges traveled is the total cost. 
-#	to reach the goal state is the total cost.
 # 6)	Heuristic Function: The heuristic funtion chooses the succesor state
 #	with the lowest number of misplaced tiles 
 
@@ -40,6 +43,12 @@
 # http://stackoverflow.com/questions/9553638/python-find-the-index-of-an-item-in-a-list-of-lists
 
 
+######################################################################################################################
+#       USES PYTHON VERSION 3
+######################################################################################################################
+
+
+
 #!/usr/local/bin/python3
 
 
@@ -48,6 +57,10 @@ import pprint
 import heapq
 import math
 import time
+
+if sys.version_info.major==2:
+	print("warning! use python3")
+
 
 # This is the GOAL STATE for the 15 Puzzle
 goal_state = [[1, 2, 3, 4],
@@ -244,7 +257,8 @@ pprint.pprint(goal, indent=4)
 print("Time taken to Solve", end_time - start_time, " seconds")
 
 print("Path to goal:")
-print('['+'] ['.join(path) + ']')
+# print('['+'] ['.join(path) + ']')
+print(' '.join(path))
 
 # FOR TESTING
 # successors = generate_successors(puzzle_unordered)
