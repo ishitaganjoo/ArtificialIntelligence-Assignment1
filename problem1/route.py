@@ -16,24 +16,16 @@ import sys, time
 #For routing option "Segments", calculated the heuristic
 #For routing option "Scenic", calculated the heuristic
 #ANSWER 5:
-def calculateHaversineDistance(lat1, long1, lat2, long2):
-    #convert degrees to radians
-    long1, lat1, long2, lat2 = map(radians, [long1,lat1,long2,lat2])
-    lon = long2-long1
-    lat = lat2-lat1
-    a = sin(lat/2)**2 + cos(lat1) * cos(lat2) * sin(lon/2)**2
-    c = 2* asin(sqrt(a))
-    distance = 3961*c
-    return distance
 
-def calculateHeuristicForTime(h):
-    return h/speed
-
-def calculateHeuristicForScenic(h):
-    return h*(0.2)   
+fringe,visitedCities,path,inputCity = [],[],[],[]
+routingOption,endCity,routingAlgorithm,startCity = '','','',''
+results,heuristic= {},{}  
+data_dict = {}
+long_lat_dict = {}
+speed = 0
 
 #read the file for longitudes and latitudes
-long_lat_dict = {}
+
 with open("city-gps.txt","r") as city_gps:
     for line in city_gps:
         data = line.split(" ")
@@ -41,8 +33,7 @@ with open("city-gps.txt","r") as city_gps:
         position.extend([data[1],data[2]])
         long_lat_dict[data[0]] = position
 #create an empty dictionary
-data_dict = {}
-speed = 0
+
 with open("road-segments.txt","r") as road_segments: #read the file and store the data in data_dict
     for line in road_segments:
         value = []
@@ -65,11 +56,28 @@ with open("road-segments.txt","r") as road_segments: #read the file and store th
             swap_value.extend([data[0],data[2],data[3],data[4]])
             data_dict[data[1]] = swap_value 
 
-fringe,visitedCities,path,inputCity = [],[],[],[]
-routingOption,endCity,routingAlgorithm = '','',''
-results,heuristic= {},{}  
          
+def readInputs(args):
+    global inputCity,startCity,endCity,routingOption,routingAlgorithm
+    #print type(inputCity)
+    startCity = args[1]
+    endCity = args[2]
+    routingOption = args[3]
+    routingAlgorithm = args[4]
+    inputCity.append(startCity)
+    if data_dict.get(inputCity[0]) == None :
+        print("Enter a valid start city!!")
+    if data_dict.get(endCity) == None:
+        print("Enter a valid end city!!")    
+    if not(routingAlgorithm == 'bfs' or  routingAlgorithm == 'dfs' or routingAlgorithm == 'astar' or routingAlgorithm == 'ids'):
+        print("Please enter a valid routing algorithm")
+    if not(routingOption == 'distance' or routingOption == 'time' or routingOption == 'segments' or routingOption == 'scenic'):
+        print("Please enter a valid routing option")
+        
+readInputs(sys.argv)
 
+print routingAlgorithm ,routingOption, inputCity, endCity
+print(data_dict)
 #returns the path of the current successor from the start city
 #Depending on the routing option, it will decide which path is the shortest path if we have two paths leading to the same city
 def returnPath(subList,path):
@@ -96,6 +104,7 @@ def returnPath(subList,path):
         path = old_path
    
     return path  
+
 #handles bfs and dfs
 #Start State : Input City
 #Goal state : End City
@@ -126,6 +135,38 @@ def return_distance(startCity, endCity):
                 if subList[0] == endCity:
                     return endCity
     return None
+
+if(routingAlgorithm== 'bfs'):
+    print("HEYYYY")
+    start = time.time() 
+    print(inputCity)
+    return_distance(inputCity,endCity)
+    while len(fringe)>0:
+        successor = fringe.pop(0) # BFS
+        result  = return_distance(successor,endCity)
+        if result == endCity:
+            stop = time.time()
+            print("time for bfs is",stop-start)
+            time.sleep(1)
+            break 
+       
+def calculateHaversineDistance(lat1, long1, lat2, long2):
+    #convert degrees to radians
+    long1, lat1, long2, lat2 = map(radians, [long1,lat1,long2,lat2])
+    lon = long2-long1
+    lat = lat2-lat1
+    a = sin(lat/2)**2 + cos(lat1) * cos(lat2) * sin(lon/2)**2
+    c = 2* asin(sqrt(a))
+    distance = 3961*c
+    return distance
+
+def calculateHeuristicForTime(h):
+    return h/speed
+
+def calculateHeuristicForScenic(h):
+    return h*(0.2)   
+
+
 
 #IDS SEARCH
 def startIDS(inputCity):
@@ -274,6 +315,7 @@ def calculateScenic(path,sum):
             sum+=1
     return sum
         
+    
 if(routingAlgorithm == 'astar'):
     start = time.time()
     return_distance_Astar(inputCity,endCity)
@@ -301,17 +343,6 @@ if(routingAlgorithm == 'astar'):
 if(routingAlgorithm == 'ids'):
     startIDS(inputCity)
     
-if(routingAlgorithm == 'bfs'):
-    start = time.time() 
-    return_distance(inputCity,endCity)
-    while len(fringe)>0:
-        successor = fringe.pop(0) # BFS
-        result  = return_distance(successor,endCity)
-        if result == endCity:
-            stop = time.time()
-            print("time for bfs is",stop-start)
-            time.sleep(1)
-            break 
        
 if(routingAlgorithm == 'dfs'):
     start = time.time()  
@@ -322,29 +353,15 @@ if(routingAlgorithm == 'dfs'):
         if result == endCity:
             stop = time.time()
             print("time for dfs is",stop-start)
-            break    
-def readInputs(args):
-    inputCity = args[1]
-    endCity = args[2]
-    routingOption = args[3]
-    routingAlgorithm = args[4]
-    if data_dict.get(inputCity) == None :
-        print("Enter a valid start city!!")
-    if data_dict.get(endCity) == None:
-        print("Enter a valid end city!!")    
-    if not(routingAlgorithm == 'bfs' or  routingAlgorithm == 'dfs' or routingAlgorithm == 'astar' or routingAlgorithm == 'ids'):
-        print("Please enter a valid routing algorithm")
-    if not(routingOption == 'distance' or routingOption == 'time' or routingOption == 'segments' or routingOption == 'scenic'):
-        print("Please enter a valid routing option") 
-        
-readInputs(sys.argv)               
+            break        
+              
 output = []
 finalPath=''
 output = results.get(endCity)
 distance, time =0,0
 distance = calculateSumOfPath(output, distance)
 time = calculateTotalTime(output, time)
-#print("SUM IS", distance, time) 
+print("SUM IS", distance, time) 
 
 for i in range (0,len(output)):
     startCity = output[i]
