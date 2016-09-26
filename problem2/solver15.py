@@ -11,6 +11,23 @@
 # 6)	Heuristic Function: The heuristic funtion chooses the succesor state
 #	with the lowest number of misplaced tiles 
 
+
+# SOLUTION DISCUSSION:
+#   Implemented the Heuristic cost estimation using
+#       1) Misplaced Tiles Heuristic
+#       2) Manhattan Distance Heuristic
+#   As expected, the Manhattan Distance Heuristic works better as the heuristic is more accurate and informative
+#   than the Misplaced Tile Heuristic
+#   For the given example input board:
+#       Using Manhattan Distance Heuristic, finds solution with below characteristics
+#           ('Fringe Length:', 5812, 'Num Nodes Expanded:', 2823, 'Cost till state:', 24)
+#             TIME TAKEN:: 0.4 seconds
+#
+#       Using MISPLACED TILE Heuristic, finds solution with below characteristics
+#           ('Fringe Length:', 1367490, 'Num Nodes Expanded:', 646486, 'Cost till state:', 24)
+#             TIME TAKEN:: 89 seconds
+#
+
 # References:
 #
 # Learned how to read a .txt file into python from the command line at:
@@ -22,21 +39,30 @@
 # Learned how to find the index of an item in a list of lists here:
 # http://stackoverflow.com/questions/9553638/python-find-the-index-of-an-item-in-a-list-of-lists
 
+
+#!/usr/local/bin/python3
+
+
 import sys
 import pprint
 import heapq
+import math
+import time
 
-puzzle_unordered = []
-# goal_state = [[1, 2, 3, 4],
-#               [5, 6, 7, 8],
-#               [9, 10, 11, 12],
-#               [13, 14, 15, 0]]
+# This is the GOAL STATE for the 15 Puzzle
+goal_state = [[1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 0]]
 
-goal_state = [[1, 2, 3],
-              [4, 5, 6],
-              [7, 8, 0]]
+# goal_state = [[1, 2, 3],
+#               [4, 5, 6],
+#               [7, 8, 0]]
 
-puzzle_length = -1
+
+# MANHATTAN OR MISPLACED
+H_FUNCTION = 'MANHATTAN'
+
 
 # Define a dictionary to represent the Directional moves based on the add/subtraction of row/col
 # Ex: if ROW is subtracted (and nothing done to Col), it represents the move DOWN
@@ -48,6 +74,10 @@ moves_dict = {
     }
 
 def read_input_file():
+    """
+    Read from the input file specified on the command prompt and create the initial board configuration
+    :return: Returns the initial board config
+    """
     input_puzzle = []
     # open text file from the command line and store as a matrix
     with open(sys.argv[1], 'r') as f:
@@ -60,8 +90,12 @@ def read_input_file():
         input_puzzle.append(sublist)
     return input_puzzle
 
-# Heuristic function (number of misplaced tiles)
 def heuristic_misplaced(puzzle_board):
+    """
+    Function to compute the cost estimate using misplaced tiles heuristic
+    :param puzzle_board:
+    :return: Heuristic cost estimate
+    """
     misplaced = 0
     for i in range(len(puzzle_board)):
         for j in range(len(puzzle_board[0])):
@@ -71,18 +105,38 @@ def heuristic_misplaced(puzzle_board):
 
 
 def get_goal_row_col(tile_number):
-    return ((tile_number-1)/puzzle_length, (tile_number-1)%4)
+    """
+    Function to compute the Goal state Row Col for any given tile number
+    :param tile_number:
+    :return: Row/Col of the goal state for the Tile
+    """
+    return (math.floor((tile_number-1)/puzzle_length), (tile_number-1)%4)
+
 
 def get_manhattan_dist_to_goal(board_state):
+    """
+    Compute Manhattan distance for the given board
+    For any Tile it is computed as the absolute Vertical distance (along the row) and Horizontal Distance(along the column)
+    to reach the goal state for the tile.
+    The total distance is the sum of all the distances for all tiles in the given board config
+    :param board_state:
+    :return: Cost for the Heuristic estimate
+    """
     dist = 0
     for row in range(puzzle_length):
         for col in range(puzzle_length):
-            goal_row, goal_col = get_goal_row_col(board_state[row][col])
-            dist = dist + abs(row - goal_row) + abs( col - goal_col)
+            if board_state[row][col] != 0:
+                goal_row, goal_col = get_goal_row_col(board_state[row][col])
+                dist = dist + abs(row - goal_row) + abs( col - goal_col)
     return dist
-# Successor function (returns 4 nodes representing the 4 possible moves)
+
 
 def generate_successors(state):
+    """
+    Successor function (returns 4 nodes representing the 4 possible moves)
+    :param state:
+    :return: List of Tuples of the form (successorstate, movedirection)
+    """
     # Find the zero'th position
     zero_position = [(i, state[i].index(0)) for i in range(len(state)) if 0 in state[i]][0]
     # Create new possible posistions for the blank tile, based on the defined moves
@@ -100,17 +154,29 @@ def is_goal_state(board_state):
     if heuristic_misplaced(board_state) == 0:
         return True
 
-def remove_larger_item_in_fringe(fringe, state, new_cost):
-    for index, item in enumerate(fringe):
-        if item[1][1] == state and item[0] > new_cost:
-            fringe[index], fringe[-1] = fringe[-1], fringe[index]
-            fringe.pop()
-            heapq.heapify(fringe)
-            return True
-    return False
+def get_H_cost(succ):
+    """
+    Function to compute the Heuristic cost, for a given board state
+         Heuristic Function to be used is defined by the H_FUNCTION constant
+    :param succ: Board State
+    :return: Will return heuristic cost
+    """
+    if H_FUNCTION == 'MANHATTAN':
+        return get_manhattan_dist_to_goal(succ)
+    elif H_FUNCTION == 'MISPLACED':
+        return heuristic_misplaced(succ)
 
 
 def solve_puzzle(initial_state):
+    """
+    Solution function to solve the initial Board using A* Algorithm
+        Heuristic function to be used is based on the constant H_FUNCTION
+    The fringe is managed as a Heap datastructure using the heapq module
+    The fringe is a list of tuples of the form: (Evaluated_cost, (Cost_from_Initial, Board_state, Path_From_Initial_State))
+    :param initial_state:
+    :return: Board_State, Path for the Goal state
+    """
+
     fringe = []
     closed = {}
     # heap_index = {} # Lets have a dictionary to have the index of a specific board in the heap, to make the search faster
@@ -127,21 +193,25 @@ def solve_puzzle(initial_state):
         # print((cost, (cost_till_state, board_state)))
         closed[hash(str(board_state))] = True
         if is_goal_state(board_state):
-            print('Fringe Length:',len(fringe),'\n', 'Cost till state:', cost_till_state)
+            print('Fringe Length:',len(fringe), 'Num Nodes Expanded:', len(closed), '\n', 'Cost till state:', cost_till_state)
             return board_state, path
         successors = generate_successors(board_state)
         for succ, move in successors:
             if closed.get(hash(str(succ))):
                 continue
 
-            h_misplaced = heuristic_misplaced(succ)
+            h_cost = get_H_cost(succ)
             # print('\n', 'Cost: ', h_misplaced + cost_till_state+1, 'Heuristic:', h_misplaced)
             # print('\n'.join(' '.join(map(str, row)) for row in succ))
-            new_cost = h_misplaced + cost_till_state+1
+            new_cost = h_cost + cost_till_state+1
 
             # BELOW CODE TO CHECK AND ADD BETTER COST TO FRINGE MIGHT NOT BE NEEDED AS ITS VERY EXPENSIVE
             # SO, EVEN IF WE ADD A LOWER COST TO THE FRINGE IT STILL IS GOING TO PROCESS THAT FIRST,
             # INSTEAD OF A HIGHER COST ONE..
+            # THE OTHER OPTION TO TRY OUT IS TO INCLUDE A DICTIONARY BASED APPROACH AND REMOVING A
+            # NODE AS SUGGESTED ON https://docs.python.org/3/library/heapq.html
+            # BUT IN OUR CASE EVEN THAT IS NOT NEEDED AS WE ARE ONLY GOING TO PICK AN ITEM
+            # THAT IS LOWER COST
 
             ############################################################################################################
             # item_present = False
@@ -161,11 +231,19 @@ def solve_puzzle(initial_state):
             heapq.heappush(fringe, (new_cost, (cost_till_state + 1, succ, path[:] + [move])))
 
 
-puzzle_unordered = read_input_file()
-puzzle_length = len(puzzle_unordered)
-goal, path = solve_puzzle(puzzle_unordered)
+initial_board = read_input_file()
+puzzle_length = len(initial_board)
+
+start_time = time.time()
+goal, path = solve_puzzle(initial_board)
+end_time = time.time()
+
+print('\nGoal State:')
 pprint.pprint(goal, indent=4)
-print("Path to goal:\n")
+
+print("Time taken to Solve", end_time - start_time, " seconds")
+
+print("Path to goal:")
 print('['+'] ['.join(path) + ']')
 
 # FOR TESTING
