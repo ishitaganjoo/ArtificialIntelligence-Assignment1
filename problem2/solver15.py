@@ -33,15 +33,6 @@ Created on Sep 18, 2016
 
 # References:
 #
-# Learned how to read a .txt file into python from the command line at:
-# https://stackoverflow.com/questions/7439145/i-want-to-read-in-a-file-from-the-command-line-in-python
-#
-# Learned how to create a matrix from a text file at:
-# http://stackoverflow.com/questions/31877901/python-string-to-matrix-representation
-#
-# Learned how to find the index of an item in a list of lists here:
-# http://stackoverflow.com/questions/9553638/python-find-the-index-of-an-item-in-a-list-of-lists
-
 
 ######################################################################################################################
 #       USES PYTHON VERSION 3
