@@ -24,20 +24,28 @@
 
 import sys
 import pprint
-from queue import PriorityQueue
 import heapq
 
 puzzle_unordered = []
-goal_state = [[1, 2, 3, 4],
-              [5, 6, 7, 8],
-              [9, 10, 11, 12],
-              [13, 14, 15, 0]]
+# goal_state = [[1, 2, 3, 4],
+#               [5, 6, 7, 8],
+#               [9, 10, 11, 12],
+#               [13, 14, 15, 0]]
 
-# goal_state = [[1, 2, 3],
-#               [4, 0, 5],
-#               [6, 7, 8]]
+goal_state = [[1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 0]]
 
 puzzle_length = -1
+
+# Define a dictionary to represent the Directional moves based on the add/subtraction of row/col
+# Ex: if ROW is subtracted (and nothing done to Col), it represents the move DOWN
+moves_dict = {
+        (-1,0): 'D',
+        (0,-1): 'R',
+        (0,1): 'L',
+        (1,0): 'U'
+    }
 
 def read_input_file():
     input_puzzle = []
@@ -62,20 +70,30 @@ def heuristic_misplaced(puzzle_board):
     return misplaced
 
 
+def get_goal_row_col(tile_number):
+    return ((tile_number-1)/puzzle_length, (tile_number-1)%4)
+
+def get_manhattan_dist_to_goal(board_state):
+    dist = 0
+    for row in range(puzzle_length):
+        for col in range(puzzle_length):
+            goal_row, goal_col = get_goal_row_col(board_state[row][col])
+            dist = dist + abs(row - goal_row) + abs( col - goal_col)
+    return dist
 # Successor function (returns 4 nodes representing the 4 possible moves)
 
 def generate_successors(state):
     # Find the zero'th position
     zero_position = [(i, state[i].index(0)) for i in range(len(state)) if 0 in state[i]][0]
     # Create new possible posistions for the blank tile, based on the defined moves
-    new_positions = [((zero_position[0]+i)%puzzle_length, (zero_position[1]+j)%puzzle_length) for i in (-1, 0, +1) for j in (-1, 0, +1) if abs(i) != abs(j)]
+    new_positions = [(((zero_position[0]+i)%puzzle_length, (zero_position[1]+j)%puzzle_length), (i,j)) for i in (-1, 0, +1) for j in (-1, 0, +1) if abs(i) != abs(j)]
     successors = []
     # generate successors
-    for pos in new_positions:
+    for (pos, move) in new_positions:
         succ = [row[:] for row in state]
         succ[zero_position[0]][zero_position[1]] = succ[pos[0]][pos[1]]
         succ[pos[0]][pos[1]] = 0
-        successors.append(succ)
+        successors.append((succ, moves_dict[move]))
     return successors
 
 def is_goal_state(board_state):
@@ -95,24 +113,24 @@ def remove_larger_item_in_fringe(fringe, state, new_cost):
 def solve_puzzle(initial_state):
     fringe = []
     closed = {}
-    heap_index = {} # Lets have a dictionary to have the index of a specific board in the heap, to make the search faster
+    # heap_index = {} # Lets have a dictionary to have the index of a specific board in the heap, to make the search faster
     if is_goal_state(initial_state):
-        return initial_state
+        return initial_state, []
 
-    heapq.heappush(fringe, (0, (0, initial_state)))
+    heapq.heappush(fringe, (0, (0, initial_state, [])))
 
     while fringe:
         # print("Printing fringe:")
         # print('Fringe Length:',len(fringe),'\n')
         # print('\n'.join(' '.join(map(str, row)) for row in fringe))
-        (cost, (cost_till_state, board_state)) = heapq.heappop(fringe)
+        (cost, (cost_till_state, board_state, path)) = heapq.heappop(fringe)
         # print((cost, (cost_till_state, board_state)))
         closed[hash(str(board_state))] = True
         if is_goal_state(board_state):
-            print('Fringe Length:',len(fringe),'\n')
-            return board_state
+            print('Fringe Length:',len(fringe),'\n', 'Cost till state:', cost_till_state)
+            return board_state, path
         successors = generate_successors(board_state)
-        for succ in successors:
+        for succ, move in successors:
             if closed.get(hash(str(succ))):
                 continue
 
@@ -140,15 +158,15 @@ def solve_puzzle(initial_state):
             #     heapq.heappush(fringe, (new_cost, (cost_till_state + 1, succ)))
             #     heap_index[succ] = len(fringe)
             ############################################################################################################
-
-            heapq.heappush(fringe, (new_cost, (cost_till_state + 1, succ)))
+            heapq.heappush(fringe, (new_cost, (cost_till_state + 1, succ, path[:] + [move])))
 
 
 puzzle_unordered = read_input_file()
 puzzle_length = len(puzzle_unordered)
-goal = solve_puzzle(puzzle_unordered)
+goal, path = solve_puzzle(puzzle_unordered)
 pprint.pprint(goal, indent=4)
-
+print("Path to goal:\n")
+print('['+'] ['.join(path) + ']')
 
 # FOR TESTING
 # successors = generate_successors(puzzle_unordered)
